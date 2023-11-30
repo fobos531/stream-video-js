@@ -11,6 +11,16 @@ import {
 } from './device-selector';
 import { isMobile } from './mobile';
 
+// import '@tensorflow/tfjs-backend-webgl';
+import * as mpSelfieSegmentation from '@mediapipe/selfie_segmentation';
+// import * as tfjsWasm from '@tensorflow/tfjs-backend-wasm';
+// import * as tf from '@tensorflow/tfjs-core';
+import * as bodySegmentation from '@tensorflow-models/body-segmentation';
+
+// tfjsWasm.setWasmPaths(
+//   `https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@${tfjsWasm.version_wasm}/dist/`,
+// );
+
 const searchParams = new URLSearchParams(window.location.search);
 const extractPayloadFromToken = (token: string) => {
   const [, payload] = token.split('.');
@@ -44,6 +54,16 @@ window.call = call;
 // @ts-ignore
 window.client = client;
 
+call.camera.setDefaultConstraints({
+  width: 640,
+  height: 480,
+});
+
+call.camera.selectTargetResolution({
+  width: 640,
+  height: 480,
+});
+
 call.screenShare.enableScreenShareAudio();
 call.screenShare.setSettings({
   maxFramerate: 10,
@@ -73,6 +93,50 @@ call.join({ create: true }).then(async () => {
   }
 
   container.appendChild(renderVolumeControl(call));
+  const blurButton = document.createElement('button');
+  blurButton.innerText = 'Blur';
+
+  blurButton.addEventListener('click', async () => {
+    const blurCanvas = document.getElementById(
+      'blur-canvas',
+    ) as HTMLCanvasElement;
+    const ctx = blurCanvas.getContext('2d')!;
+    const segmenter = await bodySegmentation.createSegmenter(
+      bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation,
+      {
+        runtime: 'mediapipe',
+        modelType: 'landscape',
+        solutionPath: `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@${mpSelfieSegmentation.VERSION}`,
+      },
+    );
+
+    const video = document.querySelector<HTMLVideoElement>('video')!;
+    const render = async () => {
+      const people = await segmenter.segmentPeople(video, {
+        flipHorizontal: false,
+        segmentBodyParts: true,
+        multiSegmentation: false,
+        segmentationThreshold: 0.7,
+      });
+
+      await bodySegmentation.drawBokehEffect(
+        blurCanvas,
+        video,
+        people,
+        0.9,
+        20,
+        10,
+      );
+
+      ctx.drawImage(video, 0, 0, blurCanvas.width, blurCanvas.height);
+
+      requestAnimationFrame(render);
+    };
+
+    requestAnimationFrame(render);
+  });
+
+  container.appendChild(blurButton);
 });
 
 window.addEventListener('beforeunload', () => {

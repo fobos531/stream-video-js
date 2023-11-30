@@ -6,8 +6,8 @@ import {
 
 // The quickstart uses fixed video dimensions for simplification
 const videoDimension = {
-  width: 333,
-  height: 250,
+  width: 1920 / 4,
+  height: 1080 / 4,
 };
 
 const videoBindingsCache = new Map<string, Function | undefined>();

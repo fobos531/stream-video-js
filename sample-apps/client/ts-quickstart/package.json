@@ -9,7 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mediapipe/selfie_segmentation": "^0.1.1675465747",
     "@stream-io/video-client": "workspace:^",
+    "@tensorflow-models/body-segmentation": "^1.0.2",
+    "@tensorflow/tfjs-backend-wasm": "^4.13.0",
+    "@tensorflow/tfjs-backend-webgl": "^4.13.0",
+    "@tensorflow/tfjs-converter": "^4.13.0",
+    "@tensorflow/tfjs-core": "^4.13.0",
     "js-base64": "^3.7.5"
   },
   "devDependencies": {
